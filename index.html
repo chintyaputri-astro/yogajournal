@@ -102,11 +102,43 @@
             </div>
         </section>
 
-        <section id="reflection-screen" class="app-screen hidden space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-xs border soft-border text-center py-10">
-                <span class="text-3xl">💭</span>
-                <h2 class="text-lg font-medium text-stone-700 mt-2">Mindful Trends & Emotional Analytics</h2>
-                <p class="text-xs text-stone-400 mt-1 max-w-xs mx-auto">Long-term mood tracking charts and automated somatic insights will process in this view.</p>
+        <section id="reflection-screen" class="app-screen hidden space-y-5">
+            <div class="bg-amber-50/70 border border-amber-200/60 p-5 rounded-2xl shadow-xs text-center">
+                <span class="text-2xl">✨</span>
+                <h3 class="text-sm font-serif font-semibold sage-accent mt-1">Your Personal Yoga Insight</h3>
+                <p id="motivation-text" class="text-xs italic text-stone-600 mt-2 leading-relaxed font-serif">
+                    "Listen to your body. Every time you step onto the mat, you welcome happiness. Sukhinah Bhavantu."
+                </p>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-xs border soft-border space-y-5">
+                <div>
+                    <h2 class="text-lg font-medium text-stone-700 mb-1">Wellness Dashboard</h2>
+                    <p class="text-xs text-stone-400">Visual analytics of your emotional and somatic landscape.</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                        <div id="stats-total" class="text-2xl font-serif font-bold text-stone-700">0</div>
+                        <div class="text-[10px] uppercase font-semibold text-stone-400 tracking-wider mt-1">Total Mat Days</div>
+                    </div>
+                    <div class="bg-stone-50 p-3 rounded-xl border border-stone-100">
+                        <div id="stats-style" class="text-sm font-medium text-stone-700 truncate pt-1">None</div>
+                        <div class="text-[10px] uppercase font-semibold text-stone-400 tracking-wider mt-2">Fav Yoga Style</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-xs font-semibold tracking-wider text-stone-400 uppercase flex items-center gap-1">🎭 Mood Distribution Diagram</h3>
+                    <div id="mood-diagram-container" class="space-y-3">
+                        </div>
+                </div>
+
+                <div class="space-y-3 pt-2">
+                    <h3 class="text-xs font-semibold tracking-wider text-stone-400 uppercase flex items-center gap-1">🪵 Body Awareness Mapping</h3>
+                    <div id="somatic-diagram-container" class="space-y-3">
+                        </div>
+                </div>
             </div>
         </section>
 
@@ -117,7 +149,6 @@
                 <p class="text-xs text-stone-400 mt-1 max-w-xs mx-auto">Personal statistics, preferred sub-styles, and gentle consistency timelines rest here.</p>
             </div>
         </section>
-
     </main>
 
     <nav class="bg-white border-t soft-border px-2 py-3 shadow-lg fixed bottom-0 left-0 right-0 z-50">
