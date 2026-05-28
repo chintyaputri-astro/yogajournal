@@ -94,11 +94,80 @@
             </div>
         </section>
 
-        <section id="plans-screen" class="app-screen hidden space-y-4">
-            <div class="bg-white p-5 rounded-2xl shadow-xs border soft-border text-center py-10">
-                <span class="text-3xl">📅</span>
-                <h2 class="text-lg font-medium text-stone-700 mt-2">Intention Scheduling & Challenges</h2>
-                <p class="text-xs text-stone-400 mt-1 max-w-xs mx-auto">Future planning configurations and gentle 30-day challenges are scaling into production soon.</p>
+        <section id="plans-screen" class="app-screen hidden space-y-5">
+            <div class="flex bg-stone-200/60 p-1 rounded-xl text-xs font-medium">
+                <button onclick="togglePlanView('manual')" id="btn-view-manual" class="flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition">Submit Your Plan</button>
+                <button onclick="togglePlanView('challenge')" id="btn-view-challenge" class="flex-1 py-2 text-center rounded-lg text-stone-500 transition">30-Day Path Challenge</button>
+            </div>
+
+            <div id="view-manual-plan" class="space-y-4">
+                <div class="bg-white p-5 rounded-2xl shadow-xs border soft-border space-y-4">
+                    <div>
+                        <h3 class="text-base font-medium text-stone-700">Schedule Single Intention</h3>
+                        <p class="text-xs text-stone-400">Map out future individual alignment goals below.</p>
+                    </div>
+                    <div class="space-y-3 text-xs">
+                        <div>
+                            <label class="block font-semibold text-stone-500 mb-1">Target Date</label>
+                            <input type="date" id="plan-date" class="w-full p-3 rounded-xl bg-stone-50 border soft-border text-sm focus:outline-none focus:border-emerald-700">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-stone-500 mb-1">Planned Style</label>
+                            <select id="plan-style" class="w-full p-3 rounded-xl bg-stone-50 border soft-border text-sm focus:outline-none focus:border-emerald-700">
+                                <option value="Hatha">Hatha</option>
+                                <option value="Vinyasa">Vinyasa</option>
+                                <option value="Yin Yoga">Yin Yoga</option>
+                                <option value="Ashtanga">Ashtanga</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-stone-500 mb-1">Custom Notes / Intentions</label>
+                            <input type="text" id="plan-notes" placeholder="e.g., Focus on calming down, listen to wrists" class="w-full p-3 rounded-xl bg-stone-50 border soft-border text-sm focus:outline-none focus:border-emerald-700">
+                        </div>
+                        <button onclick="submitManualPlan()" class="w-full py-3 sage-bg text-white font-medium text-sm rounded-xl transition hover:opacity-95 cursor-pointer">Save to Custom Calendar</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl shadow-xs border soft-border">
+                    <h4 class="text-xs font-semibold tracking-wider text-stone-400 uppercase mb-3">Your Downward Scroll Calendar</h4>
+                    <div id="calendar-scroll-container" class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        </div>
+                </div>
+            </div>
+
+            <div id="view-challenge-plan" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl border soft-border shadow-xs space-y-2">
+                    <label class="block text-xs font-semibold tracking-wider text-stone-400 uppercase">Select Curricular Month Track</label>
+                    <select id="challenge-month-select" onchange="loadChallengeCurriculumTrack()" class="w-full p-3 rounded-xl bg-stone-50 border soft-border text-sm focus:outline-none focus:border-emerald-700">
+                        <option value="1">Phase 1: Month 1 (The Foundation)</option>
+                        <option value="2">Phase 1: Month 2 (Strength Building)</option>
+                        <option value="3">Phase 1: Month 3 (Intro to Inversions)</option>
+                        <option value="4">Phase 2: Month 4 (Core & Flight Connection)</option>
+                        <option value="5">Phase 2: Month 5 (Spinal Flexibility)</option>
+                        <option value="6">Phase 2: Month 6 (Supported Inversions)</option>
+                        <option value="7">Phase 3: Month 7 (Hip Openers & Arms)</option>
+                        <option value="8">Phase 3: Month 8 (The Forearm Base)</option>
+                        <option value="9">Phase 3: Month 9 (Intro to Transitions)</option>
+                        <option value="10">Phase 4: Month 10 (Quest for Handstand)</option>
+                        <option value="11">Phase 4: Month 11 (Advanced Transitions)</option>
+                        <option value="12">Phase 4: Month 12 (Peak Mastery)</option>
+                    </select>
+                    <div id="challenge-details-card" class="bg-stone-50/60 p-3 rounded-lg border border-stone-100 text-xs text-stone-600 space-y-1">
+                        </div>
+                    <button onclick="joinSelectedChallengeTrack()" class="w-full py-2.5 mt-1 bg-emerald-700 text-white font-medium text-xs rounded-xl transition hover:bg-emerald-800 cursor-pointer">Commit & Join 30-Day Grid</button>
+                </div>
+
+                <div id="active-challenge-wrapper" class="hidden bg-white p-5 rounded-2xl shadow-xs border soft-border space-y-4">
+                    <div class="flex justify-between items-center border-b border-stone-100 pb-2">
+                        <div>
+                            <h3 id="active-challenge-title" class="text-sm font-medium text-stone-700">Active Challenge</h3>
+                            <p class="text-[10px] text-stone-400">Tap nodes to toggle completion status seamlessly.</p>
+                        </div>
+                        <div id="challenge-completion-badge" class="text-xs font-mono font-bold bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg border border-emerald-100">0% Done</div>
+                    </div>
+                    <div id="challenge-grid-container" class="grid grid-cols-5 gap-2.5">
+                        </div>
+                </div>
             </div>
         </section>
 
@@ -130,14 +199,12 @@
 
                 <div class="space-y-3 pt-2">
                     <h3 class="text-xs font-semibold tracking-wider text-stone-400 uppercase flex items-center gap-1">🎭 Mood Distribution Diagram</h3>
-                    <div id="mood-diagram-container" class="space-y-3">
-                        </div>
+                    <div id="mood-diagram-container" class="space-y-3"></div>
                 </div>
 
                 <div class="space-y-3 pt-2">
                     <h3 class="text-xs font-semibold tracking-wider text-stone-400 uppercase flex items-center gap-1">🪵 Body Awareness Mapping</h3>
-                    <div id="somatic-diagram-container" class="space-y-3">
-                        </div>
+                    <div id="somatic-diagram-container" class="space-y-3"></div>
                 </div>
             </div>
         </section>
