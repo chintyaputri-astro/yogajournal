@@ -43,7 +43,8 @@ function switchTab(screenId) {
     } else if(screenId === 'reflection') {
         renderReflectionDashboard();
     } else if(screenId === 'plans') {
-        initPlanScreenModules();
+        // Otomatis render tampilan default saat tab Plans dibuka
+        renderCalendarScrollTimeline();
     }
 }
 
@@ -142,7 +143,7 @@ function renderHistory() {
     });
 }
 
-// PLAN MODULE IMPLEMENTATION LOGIC 
+// PLAN MODULE IMPLEMENTATION LOGIC (FIXED SWITCHER MECHANICS)
 function togglePlanView(mode) {
     const viewManual = document.getElementById('view-manual-plan');
     const viewChallenge = document.getElementById('view-challenge-plan');
@@ -152,45 +153,39 @@ function togglePlanView(mode) {
     if (mode === 'manual') {
         viewManual.classList.remove('hidden');
         viewChallenge.classList.add('hidden');
-        btnManual.className = "flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition";
-        btnChallenge.className = "flex-1 py-2 text-center rounded-lg text-stone-500 transition";
+        btnManual.className = "flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition font-medium";
+        btnChallenge.className = "flex-1 py-2 text-center rounded-lg text-stone-500 transition font-normal";
+        renderCalendarScrollTimeline();
     } else {
         viewManual.classList.add('hidden');
         viewChallenge.classList.remove('hidden');
-        btnChallenge.className = "flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition";
-        btnManual.className = "flex-1 py-2 text-center rounded-lg text-stone-500 transition";
+        btnChallenge.className = "flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition font-medium";
+        btnManual.className = "flex-1 py-2 text-center rounded-lg text-stone-500 transition font-normal";
         loadChallengeCurriculumTrack();
         renderActiveChallengeGrid();
     }
 }
 
-function initPlanScreenModules() {
-    renderCalendarScrollTimeline();
-    loadChallengeCurriculumTrack();
-    renderActiveChallengeGrid();
-}
-
 // View 1 Render Engine: Infinite-Style Downward Scroll Calendar Timeline
 function renderCalendarScrollTimeline() {
     const container = document.getElementById('calendar-scroll-container');
+    if(!container) return; // Guard clause mencegah error jika tab belum ke-load
     container.innerHTML = '';
 
     const manualPlans = JSON.parse(localStorage.getItem('yoga_manual_plans')) || {};
     const today = new Date();
 
-    // Renders a scrolling window mapping 14 days into the forward trajectory
     for (let i = 0; i < 14; i++) {
         const currentTargetDate = new Date(today);
         currentTargetDate.setDate(today.getDate() + i);
         
-        const dateStringKey = currentTargetDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const dateStringKey = currentTargetDate.toISOString().split('T')[0];
         const displayLabel = currentTargetDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
         const planSubmitted = manualPlans[dateStringKey];
         
         const blockNode = document.createElement('div');
         if (planSubmitted) {
-            // Highlighting status change to warm emerald accents if data input validation crosses true
             blockNode.className = "flex justify-between items-center p-3 rounded-xl bg-emerald-50 border border-emerald-200 shadow-xs transition-all";
             blockNode.innerHTML = `
                 <div class="text-xs">
@@ -200,7 +195,6 @@ function renderCalendarScrollTimeline() {
                 <span class="text-sm">✅</span>
             `;
         } else {
-            // Inactive fallback look for unmapped future tracking paths
             blockNode.className = "flex justify-between items-center p-3 rounded-xl bg-stone-50/50 border border-stone-200/40 text-stone-400";
             blockNode.innerHTML = `
                 <span class="text-xs font-medium">${displayLabel}</span>
@@ -225,7 +219,6 @@ function submitManualPlan() {
     manualPlans[dateField] = { style: styleField, notes: notesField };
     localStorage.setItem('yoga_manual_plans', JSON.stringify(manualPlans));
 
-    // Reset interface inputs safely
     document.getElementById('plan-date').value = '';
     document.getElementById('plan-notes').value = '';
 
@@ -234,14 +227,17 @@ function submitManualPlan() {
 
 // View 2 Render Engine: 30-Day Curricular System Mechanics
 function loadChallengeCurriculumTrack() {
-    const selectionId = document.getElementById('challenge-month-select').value;
+    const selectEl = document.getElementById('challenge-month-select');
     const detailsNode = document.getElementById('challenge-details-card');
+    if(!selectEl || !detailsNode) return;
+
+    const selectionId = selectEl.value;
     const curriculumItem = CURRICULUM_DATA[selectionId];
 
     detailsNode.innerHTML = `
         <div><strong>Phase Rank:</strong> ${curriculumItem.phase}</div>
         <div><strong>Focal Area:</strong> ${curriculumItem.focus}</div>
-        <div class="text-emerald-800 font-medium"><strong>Target Peak Shape:</strong> ${curriculumItem.peak}</div>
+        <div class="text-emerald-800 font-medium mt-1"><strong>Target Peak Shape:</strong> ${curriculumItem.peak}</div>
     `;
 }
 
@@ -255,7 +251,7 @@ function joinSelectedChallengeTrack() {
     const activeTrackObject = {
         monthId: selectionId,
         title: targetChallenge.name,
-        completions: {} // Tracks integer keys 1-30 mapping state transitions
+        completions: {}
     };
 
     localStorage.setItem('yoga_active_challenge', JSON.stringify(activeTrackObject));
@@ -267,6 +263,8 @@ function renderActiveChallengeGrid() {
     const gridContainer = document.getElementById('challenge-grid-container');
     const titleNode = document.getElementById('active-challenge-title');
     const badgeNode = document.getElementById('challenge-completion-badge');
+
+    if(!wrapper || !gridContainer) return;
 
     const activeTrack = JSON.parse(localStorage.getItem('yoga_active_challenge'));
 
@@ -281,9 +279,7 @@ function renderActiveChallengeGrid() {
     gridContainer.innerHTML = '';
     let completedCount = 0;
 
-    // Build the 30-day interactive nodes map matrix
     for (let dayNumber = 1; dayNumber <= 30; dayNumber++) {
-        // Calculate the reusable day index theme matching the modular scale (1-7 loop)
         let templateIndex = dayNumber % 7;
         if (templateIndex === 0) templateIndex = 7;
 
@@ -292,17 +288,15 @@ function renderActiveChallengeGrid() {
         if (isChecked) completedCount++;
 
         const nodeBtn = document.createElement('button');
+        nodeBtn.type = "button";
         nodeBtn.onclick = () => toggleDayCompletionNode(dayNumber);
         
-        // Dynamic contextual configuration text generation algorithm 
-        let contextualSummaryText = `Day ${dayNumber}\n${dayMeta.theme}`;
         nodeBtn.title = `${dayMeta.theme}: ${dayMeta.detail}`;
 
         if (isChecked) {
             nodeBtn.className = "p-2 rounded-xl text-[10px] font-bold text-center border cursor-pointer transition bg-emerald-800 border-emerald-900 text-white shadow-xs";
             nodeBtn.innerHTML = `<div>Day ${dayNumber}</div><div class="text-[8px] opacity-80 truncate">${dayMeta.theme}</div><div class="mt-0.5 text-xs">✅</div>`;
         } else {
-            // Handle different styles based on theme characteristics (e.g., rest days are soft gray)
             if (templateIndex === 7) {
                 nodeBtn.className = "p-2 rounded-xl text-[10px] font-medium text-center border cursor-pointer transition bg-stone-100 border-stone-200 text-stone-500 hover:bg-stone-200/50";
                 nodeBtn.innerHTML = `<div>Day ${dayNumber}</div><div class="text-[8px] opacity-70 truncate text-emerald-700 font-bold">Restore</div><div class="mt-0.5 text-xs">🪵</div>`;
@@ -314,7 +308,6 @@ function renderActiveChallengeGrid() {
         gridContainer.appendChild(nodeBtn);
     }
 
-    // Compute metrics output variables
     const finalPercentage = Math.round((completedCount / 30) * 100);
     badgeNode.innerText = `${finalPercentage}% Done`;
 }
@@ -323,7 +316,6 @@ function toggleDayCompletionNode(dayNum) {
     let activeTrack = JSON.parse(localStorage.getItem('yoga_active_challenge'));
     if (!activeTrack) return;
 
-    // Inverse boolean configuration rules
     activeTrack.completions[dayNum] = !activeTrack.completions[dayNum];
     localStorage.setItem('yoga_active_challenge', JSON.stringify(activeTrack));
     
@@ -393,22 +385,4 @@ function renderReflectionDashboard() {
         row.innerHTML = `
             <div class="flex justify-between text-xs text-stone-600">
                 <span class="${key === 'No Injury' ? 'text-emerald-700 font-medium' : ''}">${key}</span>
-                <span class="font-mono text-stone-400">${percentage}% of entries</span>
-            </div>
-            <div class="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                <div class="${barColor} h-full rounded-full" style="width: ${percentage}%"></div>
-            </div>
-        `;
-        somaticContainer.appendChild(row);
-    });
-
-    // Injects unique motivational feedback looping conditions tracking Day 1 states directly
-    const recentLog = logs[0];
-    if (recentLog.injury_area.includes('No Injury')) {
-        motivationText.innerHTML = `"Your body feels light and beautifully open today! Enjoy this vibrant energy on the mat, listen to your intuition, and let your practice bring you deep inner happiness. Sukhinah Bhavantu."`;
-    } else if (recentLog.mood === 'Overwhelmed' || recentLog.mood === 'Anxious' || recentLog.injury_area.includes('Fatigue')) {
-        motivationText.innerHTML = `"It is perfectly human to feel tired or heavy sometimes. Remember, yoga is not about forcing your body into shapes—it is about creating soft spaces to breathe and heal. Listen to your body, rest without guilt, and move gently today. True happiness comes from self-compassion."`;
-    } else {
-        motivationText.innerHTML = `"Thank you for showing up for yourself today. Every mindful stretch and steady breath clears away your stress and balances your energy. Trust your natural rhythm on this journey. Sukhinah Bhavantu."`;
-    }
-}
+                <span class="font-mono text-stone-400
