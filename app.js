@@ -1,4 +1,31 @@
-// Screen Context Switcher Engine
+// Curriculum Syllabus Data Model (Phases 1-4 mapped directly from BRD parameters)
+const CURRICULUM_DATA = {
+    1: { name: "Month 1: The Foundation", phase: "Beginner", focus: "Joint mobility, basic shapes alignment.", peak: "Crow Pose Setup" },
+    2: { name: "Month 2: Strength Building", phase: "Beginner", focus: "Chaturanga mechanics, muscular endurance.", peak: "Crow Pose (Foot Lift)" },
+    3: { name: "Month 3: Intro to Inversions", phase: "Beginner", focus: "Dolphin Pose, Wall L-Stands structural stack.", peak: "Tripod Headstand Setup" },
+    4: { name: "Month 4: Core & Flight Connection", phase: "Beg-to-Int", focus: "Arm balances core leverage dynamics.", peak: "Side Crow (Parsva Bakasana)" },
+    5: { name: "Month 5: Spinal Flexibility & Backbends", phase: "Beg-to-Int", focus: "Thoracic spine opening, active shoulder activation.", peak: "Full Wheel Pose" },
+    6: { name: "Month 6: Supported Inversions", phase: "Beg-to-Int", focus: "Headstand control, learn safe tuck and roll maneuvers.", peak: "Tripod Sirsasana II" },
+    7: { name: "Month 7: Hip Openers meet Arm Balances", phase: "Int-to-Adv", focus: "Splits training, extreme hip integration.", peak: "Eight-Angle Pose" },
+    8: { name: "Month 8: The Forearm Base", phase: "Int-to-Adv", focus: "Pincha Mayurasana conditioning, chest opening.", peak: "Forearm Balance (Pincha)" },
+    9: { name: "Month 9: Intro to Transitions", phase: "Int-to-Adv", focus: "Seamless shape variations linking frameworks.", peak: "Crow to Tripod Headstand" },
+    10: { name: "Month 10: Quest for Handstand", phase: "Advanced", focus: "Wrists weight bearing stack, pelvic control.", peak: "Freestanding Handstand" },
+    11: { name: "Month 11: Advanced Transitions", phase: "Advanced", focus: "Defying gravity linkages, lowering control dynamics.", peak: "Forearm Stand to Scorpion" },
+    12: { name: "Month 12: Peak Mastery & Integration", phase: "Advanced", focus: "Stamina and intuitive fluid vinyasa flows.", peak: "Flying Crow & Transitions" }
+};
+
+// Reusable Weekly Template Tracker Rules (Determined by modulo math 1-7)
+const WEEKLY_TEMPLATE = {
+    1: { theme: "Arm Balance Flow", detail: "Beg: Crow Prep → Int: Side Crow → Adv: Flying Pigeon" },
+    2: { theme: "Hip Opening", detail: "Beg: Pigeon Pose → Int: Splits Prep → Adv: Compass / Lotus" },
+    3: { theme: "Inversion", detail: "Beg: Wall L-Stand → Int: Headstand → Adv: Handstand" },
+    4: { theme: "Balance & Core", detail: "Beg: Tree / Plank → Int: Warrior III → Adv: Toe Taps to Handstand" },
+    5: { theme: "Backbend", detail: "Beg: Bridge → Int: Wheel Pose → Adv: King Pigeon / Scorpion" },
+    6: { theme: "Arm Balance → Inversion", detail: "Beg: Crow to Plank → Int: Crow to Headstand → Adv: Handstand to Crow" },
+    7: { theme: "Rest & Restore", detail: "Passive stretches, yin yoga, and deep non-negotiable wrist care care." }
+};
+
+// Screen Switcher Core Context Engine
 function switchTab(screenId) {
     document.querySelectorAll('.app-screen').forEach(screen => screen.classList.add('hidden'));
     document.getElementById(`${screenId}-screen`).classList.remove('hidden');
@@ -11,11 +38,12 @@ function switchTab(screenId) {
     event.currentTarget.classList.add('sage-accent');
     event.currentTarget.classList.remove('text-stone-400');
 
-    // Run dynamic view loading mechanics
     if(screenId === 'practice') {
         renderHistory();
     } else if(screenId === 'reflection') {
         renderReflectionDashboard();
+    } else if(screenId === 'plans') {
+        initPlanScreenModules();
     }
 }
 
@@ -64,7 +92,6 @@ function submitCheckIn() {
 function calculateRecommendations(mood, concerns) {
     const box = document.getElementById('recommendation-box');
     const text = document.getElementById('recommendation-text');
-    
     box.classList.remove('hidden');
 
     if (concerns.includes('No Injury') && (mood === 'Calm' || mood === 'Grounded' || mood === 'Happy')) {
@@ -94,7 +121,6 @@ function renderHistory() {
     }
 
     container.innerHTML = '';
-    
     logs.forEach(log => {
         const poseBadges = log.poses.map(p => `<span class="bg-stone-100 px-2 py-0.5 rounded text-xs text-stone-600 font-mono">${p}</span>`).join(' ');
         const concernString = log.injury_area.join(', ');
@@ -116,7 +142,195 @@ function renderHistory() {
     });
 }
 
-// NEW FUNCTION: Compiles Data and Renders Diagrams inside Reflection Tab
+// PLAN MODULE IMPLEMENTATION LOGIC 
+function togglePlanView(mode) {
+    const viewManual = document.getElementById('view-manual-plan');
+    const viewChallenge = document.getElementById('view-challenge-plan');
+    const btnManual = document.getElementById('btn-view-manual');
+    const btnChallenge = document.getElementById('btn-view-challenge');
+
+    if (mode === 'manual') {
+        viewManual.classList.remove('hidden');
+        viewChallenge.classList.add('hidden');
+        btnManual.className = "flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition";
+        btnChallenge.className = "flex-1 py-2 text-center rounded-lg text-stone-500 transition";
+    } else {
+        viewManual.classList.add('hidden');
+        viewChallenge.classList.remove('hidden');
+        btnChallenge.className = "flex-1 py-2 text-center rounded-lg bg-white shadow-xs text-stone-800 transition";
+        btnManual.className = "flex-1 py-2 text-center rounded-lg text-stone-500 transition";
+        loadChallengeCurriculumTrack();
+        renderActiveChallengeGrid();
+    }
+}
+
+function initPlanScreenModules() {
+    renderCalendarScrollTimeline();
+    loadChallengeCurriculumTrack();
+    renderActiveChallengeGrid();
+}
+
+// View 1 Render Engine: Infinite-Style Downward Scroll Calendar Timeline
+function renderCalendarScrollTimeline() {
+    const container = document.getElementById('calendar-scroll-container');
+    container.innerHTML = '';
+
+    const manualPlans = JSON.parse(localStorage.getItem('yoga_manual_plans')) || {};
+    const today = new Date();
+
+    // Renders a scrolling window mapping 14 days into the forward trajectory
+    for (let i = 0; i < 14; i++) {
+        const currentTargetDate = new Date(today);
+        currentTargetDate.setDate(today.getDate() + i);
+        
+        const dateStringKey = currentTargetDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        const displayLabel = currentTargetDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+        const planSubmitted = manualPlans[dateStringKey];
+        
+        const blockNode = document.createElement('div');
+        if (planSubmitted) {
+            // Highlighting status change to warm emerald accents if data input validation crosses true
+            blockNode.className = "flex justify-between items-center p-3 rounded-xl bg-emerald-50 border border-emerald-200 shadow-xs transition-all";
+            blockNode.innerHTML = `
+                <div class="text-xs">
+                    <span class="block font-bold text-emerald-900">${displayLabel}</span>
+                    <span class="text-emerald-700 italic mt-0.5 block">${planSubmitted.style} — ${planSubmitted.notes || 'No custom notes set'}</span>
+                </div>
+                <span class="text-sm">✅</span>
+            `;
+        } else {
+            // Inactive fallback look for unmapped future tracking paths
+            blockNode.className = "flex justify-between items-center p-3 rounded-xl bg-stone-50/50 border border-stone-200/40 text-stone-400";
+            blockNode.innerHTML = `
+                <span class="text-xs font-medium">${displayLabel}</span>
+                <span class="text-[10px] uppercase font-bold tracking-wider text-stone-300">Unscheduled</span>
+            `;
+        }
+        container.appendChild(blockNode);
+    }
+}
+
+function submitManualPlan() {
+    const dateField = document.getElementById('plan-date').value;
+    const styleField = document.getElementById('plan-style').value;
+    const notesField = document.getElementById('plan-notes').value;
+
+    if (!dateField) {
+        alert("Please assign a targeted timeline date node configuration.");
+        return;
+    }
+
+    let manualPlans = JSON.parse(localStorage.getItem('yoga_manual_plans')) || {};
+    manualPlans[dateField] = { style: styleField, notes: notesField };
+    localStorage.setItem('yoga_manual_plans', JSON.stringify(manualPlans));
+
+    // Reset interface inputs safely
+    document.getElementById('plan-date').value = '';
+    document.getElementById('plan-notes').value = '';
+
+    renderCalendarScrollTimeline();
+}
+
+// View 2 Render Engine: 30-Day Curricular System Mechanics
+function loadChallengeCurriculumTrack() {
+    const selectionId = document.getElementById('challenge-month-select').value;
+    const detailsNode = document.getElementById('challenge-details-card');
+    const curriculumItem = CURRICULUM_DATA[selectionId];
+
+    detailsNode.innerHTML = `
+        <div><strong>Phase Rank:</strong> ${curriculumItem.phase}</div>
+        <div><strong>Focal Area:</strong> ${curriculumItem.focus}</div>
+        <div class="text-emerald-800 font-medium"><strong>Target Peak Shape:</strong> ${curriculumItem.peak}</div>
+    `;
+}
+
+function joinSelectedChallengeTrack() {
+    const selectionId = document.getElementById('challenge-month-select').value;
+    const targetChallenge = CURRICULUM_DATA[selectionId];
+
+    const confirmJoin = confirm(`Would you like to commit and join the 30-Day track for "${targetChallenge.name}"?`);
+    if (!confirmJoin) return;
+
+    const activeTrackObject = {
+        monthId: selectionId,
+        title: targetChallenge.name,
+        completions: {} // Tracks integer keys 1-30 mapping state transitions
+    };
+
+    localStorage.setItem('yoga_active_challenge', JSON.stringify(activeTrackObject));
+    renderActiveChallengeGrid();
+}
+
+function renderActiveChallengeGrid() {
+    const wrapper = document.getElementById('active-challenge-wrapper');
+    const gridContainer = document.getElementById('challenge-grid-container');
+    const titleNode = document.getElementById('active-challenge-title');
+    const badgeNode = document.getElementById('challenge-completion-badge');
+
+    const activeTrack = JSON.parse(localStorage.getItem('yoga_active_challenge'));
+
+    if (!activeTrack) {
+        wrapper.classList.add('hidden');
+        return;
+    }
+
+    wrapper.classList.remove('hidden');
+    titleNode.innerText = activeTrack.title;
+
+    gridContainer.innerHTML = '';
+    let completedCount = 0;
+
+    // Build the 30-day interactive nodes map matrix
+    for (let dayNumber = 1; dayNumber <= 30; dayNumber++) {
+        // Calculate the reusable day index theme matching the modular scale (1-7 loop)
+        let templateIndex = dayNumber % 7;
+        if (templateIndex === 0) templateIndex = 7;
+
+        const dayMeta = WEEKLY_TEMPLATE[templateIndex];
+        const isChecked = activeTrack.completions[dayNumber] || false;
+        if (isChecked) completedCount++;
+
+        const nodeBtn = document.createElement('button');
+        nodeBtn.onclick = () => toggleDayCompletionNode(dayNumber);
+        
+        // Dynamic contextual configuration text generation algorithm 
+        let contextualSummaryText = `Day ${dayNumber}\n${dayMeta.theme}`;
+        nodeBtn.title = `${dayMeta.theme}: ${dayMeta.detail}`;
+
+        if (isChecked) {
+            nodeBtn.className = "p-2 rounded-xl text-[10px] font-bold text-center border cursor-pointer transition bg-emerald-800 border-emerald-900 text-white shadow-xs";
+            nodeBtn.innerHTML = `<div>Day ${dayNumber}</div><div class="text-[8px] opacity-80 truncate">${dayMeta.theme}</div><div class="mt-0.5 text-xs">✅</div>`;
+        } else {
+            // Handle different styles based on theme characteristics (e.g., rest days are soft gray)
+            if (templateIndex === 7) {
+                nodeBtn.className = "p-2 rounded-xl text-[10px] font-medium text-center border cursor-pointer transition bg-stone-100 border-stone-200 text-stone-500 hover:bg-stone-200/50";
+                nodeBtn.innerHTML = `<div>Day ${dayNumber}</div><div class="text-[8px] opacity-70 truncate text-emerald-700 font-bold">Restore</div><div class="mt-0.5 text-xs">🪵</div>`;
+            } else {
+                nodeBtn.className = "p-2 rounded-xl text-[10px] font-medium text-center border cursor-pointer transition bg-white border-stone-200 text-stone-700 hover:bg-stone-50";
+                nodeBtn.innerHTML = `<div>Day ${dayNumber}</div><div class="text-[8px] opacity-70 truncate">${dayMeta.theme}</div><div class="mt-0.5 text-xs opacity-0">⭕</div>`;
+            }
+        }
+        gridContainer.appendChild(nodeBtn);
+    }
+
+    // Compute metrics output variables
+    const finalPercentage = Math.round((completedCount / 30) * 100);
+    badgeNode.innerText = `${finalPercentage}% Done`;
+}
+
+function toggleDayCompletionNode(dayNum) {
+    let activeTrack = JSON.parse(localStorage.getItem('yoga_active_challenge'));
+    if (!activeTrack) return;
+
+    // Inverse boolean configuration rules
+    activeTrack.completions[dayNum] = !activeTrack.completions[dayNum];
+    localStorage.setItem('yoga_active_challenge', JSON.stringify(activeTrack));
+    
+    renderActiveChallengeGrid();
+}
+
+// REFLECTION ANALYSIS DASHBOARD COMPILER
 function renderReflectionDashboard() {
     const logs = JSON.parse(localStorage.getItem('yoga_checkins')) || [];
     
@@ -128,7 +342,6 @@ function renderReflectionDashboard() {
 
     statsTotal.innerText = logs.length;
 
-    // Loading Framework state if data doesn't exist yet
     if (logs.length === 0) {
         statsStyle.innerText = "None Yet";
         moodContainer.innerHTML = `<p class="text-xs italic text-stone-400 text-center py-4">Complete your daily check-in to draw the mood landscape diagram.</p>`;
@@ -149,16 +362,13 @@ function renderReflectionDashboard() {
         });
     });
 
-    // Calculate Favorite Style
     let favoriteStyle = Object.keys(styleMap).reduce((a, b) => styleMap[a] > styleMap[b] ? a : b, "None");
     statsStyle.innerText = favoriteStyle;
 
-    // Render Diagram 1: Mood Landscape Bars
     moodContainer.innerHTML = '';
     Object.keys(moodMap).forEach(key => {
         const count = moodMap[key];
         const percentage = Math.round((count / logs.length) * 100);
-        
         const row = document.createElement('div');
         row.className = "space-y-1";
         row.innerHTML = `
@@ -173,13 +383,11 @@ function renderReflectionDashboard() {
         moodContainer.appendChild(row);
     });
 
-    // Render Diagram 2: Somatic Matrix Bars
     somaticContainer.innerHTML = '';
     Object.keys(somaticMap).forEach(key => {
         const count = somaticMap[key];
         const percentage = Math.round((count / logs.length) * 100);
         const barColor = key === 'No Injury' ? 'bg-emerald-600' : 'bg-amber-600/70';
-
         const row = document.createElement('div');
         row.className = "space-y-1";
         row.innerHTML = `
@@ -194,7 +402,7 @@ function renderReflectionDashboard() {
         somaticContainer.appendChild(row);
     });
 
-    // Smart Motivation Engine (Changes text depending on user inputs)
+    // Injects unique motivational feedback looping conditions tracking Day 1 states directly
     const recentLog = logs[0];
     if (recentLog.injury_area.includes('No Injury')) {
         motivationText.innerHTML = `"Your body feels light and beautifully open today! Enjoy this vibrant energy on the mat, listen to your intuition, and let your practice bring you deep inner happiness. Sukhinah Bhavantu."`;
