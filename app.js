@@ -1,61 +1,51 @@
 // Screen Context Switcher Engine
 function switchTab(screenId) {
-    // Hide all application viewpoints
     document.querySelectorAll('.app-screen').forEach(screen => screen.classList.add('hidden'));
-    
-    // Mount targeted viewport interface
     document.getElementById(`${screenId}-screen`).classList.remove('hidden');
     
-    // Reset global tab button highlights
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('sage-accent');
         btn.classList.add('text-stone-400');
     });
     
-    // Highlight currently triggered interface trigger
     event.currentTarget.classList.add('sage-accent');
     event.currentTarget.classList.remove('text-stone-400');
 
-    // Dynamic execution block: Re-render practice log on navigation trigger
+    // Run dynamic view loading mechanics
     if(screenId === 'practice') {
         renderHistory();
+    } else if(screenId === 'reflection') {
+        renderReflectionDashboard();
     }
 }
 
-// UI Interaction Architecture: Mutual Exclusion Logic for Body State Choices
 function toggleInjuryOptions(noInjuryCheckbox) {
     if (noInjuryCheckbox.checked) {
-        // Clear all localized strain declarations instantly if user asserts physical wellness
         document.querySelectorAll('.injury-specific').forEach(cb => {
             cb.checked = false;
         });
     }
 }
 
-// Dynamically watch specific inputs to undo the "No Injury" status if an injury is added
 document.addEventListener('change', function(e) {
     if (e.target.classList.contains('injury-specific') && e.target.checked) {
         document.getElementById('no-injury-check').checked = false;
     }
 });
 
-// Primary System Event Process: Daily Check-In Record Compilation
 function submitCheckIn() {
     const selectedMood = document.getElementById('mood-input').value;
     const chosenStyle = document.getElementById('style-input').value;
     const enteredPoses = document.getElementById('poses-input').value;
     
-    // Map currently targeted checkboxes to array structures
     let physicalConcerns = [];
     document.querySelectorAll('.body-concern:checked').forEach(cb => physicalConcerns.push(cb.value));
 
-    // Fallback assignment: If no options are checked, gently default safely to No Injury framework
     if (physicalConcerns.length === 0) {
         physicalConcerns.push("No Injury");
         document.getElementById('no-injury-check').checked = true;
     }
 
-    // Build the data structural schema matching the BRD
     const checkInRecord = {
         timestamp: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
         mood: selectedMood,
@@ -64,35 +54,29 @@ function submitCheckIn() {
         injury_area: physicalConcerns
     };
     
-    // Commit payload to browser LocalStorage array structures
     let existingLogs = JSON.parse(localStorage.getItem('yoga_checkins')) || [];
-    existingLogs.unshift(checkInRecord); // Prepend so new entries sit neatly at the top
+    existingLogs.unshift(checkInRecord);
     localStorage.setItem('yoga_checkins', JSON.stringify(existingLogs));
 
-    // Trigger Recommendation System Logic Engines
     calculateRecommendations(selectedMood, physicalConcerns);
 }
 
-// System Rule Engine Calculation Logic Block
 function calculateRecommendations(mood, concerns) {
     const box = document.getElementById('recommendation-box');
     const text = document.getElementById('recommendation-text');
     
     box.classList.remove('hidden');
 
-    // Rule Logic 1: The Balanced Vibrant State
     if (concerns.includes('No Injury') && (mood === 'Calm' || mood === 'Grounded' || mood === 'Happy')) {
         text.innerHTML = `Your body and mind are beautifully aligned and open today! ✨<br><br>
         <strong>Suggested Flow:</strong> A full Vinyasa Flow or a structured Ashtanga series.<br>
         <strong>Mindful Tip:</strong> Your kinetic baseline is steady. It is an amazing day to safely explore targets like Crow Pose or Pincha if it feels right.`;
     } 
-    // Rule Logic 2: Protective & Somatic Restorative Requirements Intercept
     else if (concerns.includes('Lower Back') || concerns.includes('Fatigue') || concerns.includes('Neck') || mood === 'Overwhelmed' || mood === 'Anxious') {
         text.innerHTML = `Your system is asking for soft, safe spaces right now. 🍃<br><br>
         <strong>Suggested Flow:</strong> Deep Yin Yoga, Restorative structural alignment, or simple Pranayama (breathwork).<br>
         <strong>Anatomical Warning:</strong> Intentionally bypass aggressive inversions or intense core spinal extensions. Focus entirely on decompression.`;
     } 
-    // Rule Logic 3: Baseline Fallback Equilibrium Path
     else {
         text.innerHTML = `Your system presents a standard, intuitive foundation today. <br><br>
         <strong>Suggested Flow:</strong> Slow Hatha exploration or an intentional mobility framework.<br>
@@ -100,7 +84,6 @@ function calculateRecommendations(mood, concerns) {
     }
 }
 
-// Local Storage Reading Engine (Renders into Practice History View)
 function renderHistory() {
     const container = document.getElementById('history-container');
     const logs = JSON.parse(localStorage.getItem('yoga_checkins')) || [];
@@ -110,7 +93,7 @@ function renderHistory() {
         return;
     }
 
-    container.innerHTML = ''; // Wipe out baseline loading states
+    container.innerHTML = '';
     
     logs.forEach(log => {
         const poseBadges = log.poses.map(p => `<span class="bg-stone-100 px-2 py-0.5 rounded text-xs text-stone-600 font-mono">${p}</span>`).join(' ');
@@ -131,4 +114,93 @@ function renderHistory() {
         `;
         container.appendChild(card);
     });
+}
+
+// NEW FUNCTION: Compiles Data and Renders Diagrams inside Reflection Tab
+function renderReflectionDashboard() {
+    const logs = JSON.parse(localStorage.getItem('yoga_checkins')) || [];
+    
+    const statsTotal = document.getElementById('stats-total');
+    const statsStyle = document.getElementById('stats-style');
+    const moodContainer = document.getElementById('mood-diagram-container');
+    const somaticContainer = document.getElementById('somatic-diagram-container');
+    const motivationText = document.getElementById('motivation-text');
+
+    statsTotal.innerText = logs.length;
+
+    // Loading Framework state if data doesn't exist yet
+    if (logs.length === 0) {
+        statsStyle.innerText = "None Yet";
+        moodContainer.innerHTML = `<p class="text-xs italic text-stone-400 text-center py-4">Complete your daily check-in to draw the mood landscape diagram.</p>`;
+        somaticContainer.innerHTML = `<p class="text-xs italic text-stone-400 text-center py-4">Complete your daily check-in to map body concern graphs.</p>`;
+        motivationText.innerHTML = `"Every journey begins with a single intentional breath. Step onto your mat today and listen closely to what your body needs. Sukhinah Bhavantu."`;
+        return;
+    }
+
+    let styleMap = {};
+    let moodMap = {};
+    let somaticMap = {};
+
+    logs.forEach(log => {
+        styleMap[log.style] = (styleMap[log.style] || 0) + 1;
+        moodMap[log.mood] = (moodMap[log.mood] || 0) + 1;
+        log.injury_area.forEach(area => {
+            somaticMap[area] = (somaticMap[area] || 0) + 1;
+        });
+    });
+
+    // Calculate Favorite Style
+    let favoriteStyle = Object.keys(styleMap).reduce((a, b) => styleMap[a] > styleMap[b] ? a : b, "None");
+    statsStyle.innerText = favoriteStyle;
+
+    // Render Diagram 1: Mood Landscape Bars
+    moodContainer.innerHTML = '';
+    Object.keys(moodMap).forEach(key => {
+        const count = moodMap[key];
+        const percentage = Math.round((count / logs.length) * 100);
+        
+        const row = document.createElement('div');
+        row.className = "space-y-1";
+        row.innerHTML = `
+            <div class="flex justify-between text-xs text-stone-600">
+                <span>${key}</span>
+                <span class="font-mono font-bold text-stone-500">${percentage}% (${count}d)</span>
+            </div>
+            <div class="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                <div class="sage-bg h-full rounded-full" style="width: ${percentage}%"></div>
+            </div>
+        `;
+        moodContainer.appendChild(row);
+    });
+
+    // Render Diagram 2: Somatic Matrix Bars
+    somaticContainer.innerHTML = '';
+    Object.keys(somaticMap).forEach(key => {
+        const count = somaticMap[key];
+        const percentage = Math.round((count / logs.length) * 100);
+        const barColor = key === 'No Injury' ? 'bg-emerald-600' : 'bg-amber-600/70';
+
+        const row = document.createElement('div');
+        row.className = "space-y-1";
+        row.innerHTML = `
+            <div class="flex justify-between text-xs text-stone-600">
+                <span class="${key === 'No Injury' ? 'text-emerald-700 font-medium' : ''}">${key}</span>
+                <span class="font-mono text-stone-400">${percentage}% of entries</span>
+            </div>
+            <div class="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                <div class="${barColor} h-full rounded-full" style="width: ${percentage}%"></div>
+            </div>
+        `;
+        somaticContainer.appendChild(row);
+    });
+
+    // Smart Motivation Engine (Changes text depending on user inputs)
+    const recentLog = logs[0];
+    if (recentLog.injury_area.includes('No Injury')) {
+        motivationText.innerHTML = `"Your body feels light and beautifully open today! Enjoy this vibrant energy on the mat, listen to your intuition, and let your practice bring you deep inner happiness. Sukhinah Bhavantu."`;
+    } else if (recentLog.mood === 'Overwhelmed' || recentLog.mood === 'Anxious' || recentLog.injury_area.includes('Fatigue')) {
+        motivationText.innerHTML = `"It is perfectly human to feel tired or heavy sometimes. Remember, yoga is not about forcing your body into shapes—it is about creating soft spaces to breathe and heal. Listen to your body, rest without guilt, and move gently today. True happiness comes from self-compassion."`;
+    } else {
+        motivationText.innerHTML = `"Thank you for showing up for yourself today. Every mindful stretch and steady breath clears away your stress and balances your energy. Trust your natural rhythm on this journey. Sukhinah Bhavantu."`;
+    }
 }
