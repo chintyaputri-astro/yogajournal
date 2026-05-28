@@ -385,4 +385,21 @@ function renderReflectionDashboard() {
         row.innerHTML = `
             <div class="flex justify-between text-xs text-stone-600">
                 <span class="${key === 'No Injury' ? 'text-emerald-700 font-medium' : ''}">${key}</span>
-                <span class="font-mono text-stone-400
+                <span class="font-mono text-stone-400">${percentage}% of entries</span>
+            </div>
+            <div class="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                <div class="${barColor} h-full rounded-full" style="width: ${percentage}%"></div>
+            </div>
+        `;
+        somaticContainer.appendChild(row);
+    });
+
+    const recentLog = logs[0];
+    if (recentLog.injury_area.includes('No Injury')) {
+        motivationText.innerHTML = `"Your body feels light and beautifully open today! Enjoy this vibrant energy on the mat, listen to your intuition, and let your practice bring you deep inner happiness. Sukhinah Bhavantu."`;
+    } else if (recentLog.mood === 'Overwhelmed' || recentLog.mood === 'Anxious' || recentLog.injury_area.includes('Fatigue')) {
+        motivationText.innerHTML = `"It is perfectly human to feel tired or heavy sometimes. Remember, yoga is not about forcing your body into shapes—it is about creating soft spaces to breathe and heal. Listen to your body, rest without guilt, and move gently today. True happiness comes from self-compassion."`;
+    } else {
+        motivationText.innerHTML = `"Thank you for showing up for yourself today. Every mindful stretch and steady breath clears away your stress and balances your energy. Trust your natural rhythm on this journey. Sukhinah Bhavantu."`;
+    }
+}
